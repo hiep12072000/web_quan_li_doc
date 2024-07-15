@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // NOTE: You probably want to change this to another database later on
+  provider = "sqlite"
+
+  // This value is read from the .env file.
+  url = "file:./db.sqlite"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  username  String   @unique
+  password  String
+  role      Int
+  resetId   String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  createdDocuments  Document[] @relation("createdDocuments")
+  approvedDocuments Document[] @relation("replyUser")
+}
+
+model DocumentType {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  documents Document[]
+}
+
+model Document {
+  id             String  @id @default(uuid())
+  code           String  @unique
+  title          String?
+  direction      Int
+  documentTypeId String
+  quantity       Int
+  date           String
+  receiver       String?
+  receiveUnit    String?
+  signer         String?
+  content        String
+  description    String?
+  filePath       String?
+  createdBy      String
+  needReply      Boolean @default(false)
+  ignoreReply    Boolean @default(false)
+  replyBy        String?
+  replyDeadline  String?
+  replyTo        String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  documentType    DocumentType @relation(fields: [documentTypeId], references: [id])
+  createdUser     User         @relation("createdDocuments", fields: [createdBy], references: [id])
+  replyUser       User?        @relation("replyUser", fields: [replyBy], references: [id])
+  replyToDocument Document?    @relation("replyDocument", fields: [replyTo], references: [id])
+  repliedDocument Document?    @relation("replyDocument")
+}
